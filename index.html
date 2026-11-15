@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Koiran ruokinta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(100,45%,95%); --card:hsl(100,55%,99%); --line:hsl(100,32%,86%); --soft:hsl(100,45%,96%); --hover:hsl(100,45%,82%); --glow:hsl(100,55%,89%);
+  --pri:hsl(100,40%,46%); --pri-d:hsl(100,45%,34%); --pri-l:hsl(100,45%,88%);
+  --text:hsl(100,28%,16%); --muted:hsl(100,12%,42%); --dark:hsl(100,25%,12%);
+  --warn:#c8741f; --warn-l:#fdeed9; --crit:#c8423a; --crit-l:#fbe3e0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Nunito,system-ui,sans-serif;font-size:17px;overflow-x:hidden;transition:background .4s}
+body{padding:16px 14px 90px;max-width:980px;margin:0 auto;background-image:radial-gradient(circle at 15% 0%,var(--glow) 0,transparent 45%)}
+button,input,select{font-family:inherit;font-size:1rem;color:var(--text)}
+button{cursor:pointer;border:none;border-radius:14px;padding:10px 16px;font-weight:800;background:var(--pri-l);transition:transform .08s,background .15s}
+button:active{transform:scale(.97)}
+button:hover{background:var(--hover)}
+button.ghost{background:transparent;border:2px solid var(--line)}
+button.ghost:hover{background:var(--soft)}
+button.primary{background:var(--pri);color:#fff}
+button.primary:hover{background:var(--pri-d)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--pri)}
+.top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 18px rgba(0,0,0,.15);flex:none;background:var(--pri-l);display:grid;place-items:center}
+.avatar svg{width:46%;height:46%;fill:var(--pri)}
+.top h1{margin:0;font-size:2rem;font-weight:900;line-height:1}
+.top .breed{font-size:.85rem;font-weight:700;color:var(--muted);margin-left:2px}
+.top .sub{color:var(--muted);font-weight:700;margin-top:6px}
+.top .gear{margin-left:auto;width:46px;height:46px;padding:0;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:1.25rem}
+.alert{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:16px;margin-bottom:14px;font-weight:700}
+.alert.warn{background:var(--warn-l);color:#8a4a12}
+.alert.crit{background:var(--crit-l);color:#8b231d}
+.alert button{margin-left:auto;flex:none}
+.cols{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:860px){.cols{grid-template-columns:1.1fr 1fr;align-items:start}}
+.card{background:var(--card);border-radius:24px;padding:20px;box-shadow:0 2px 0 var(--line),0 8px 24px rgba(0,0,0,.05)}
+.card h2{margin:0 0 14px;font-size:1.05rem;font-weight:900;display:flex;align-items:center;gap:8px}
+.card h2 .paw{width:20px;height:20px;fill:var(--pri)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.today-top{display:flex;align-items:center;gap:18px}
+.ring{width:150px;height:150px;flex:none}
+.ring .bg{fill:none;stroke:var(--pri-l);stroke-width:14}
+.ring .fg{fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dasharray .5s}
+.ring text{font-family:Nunito,system-ui;text-anchor:middle}
+.ring .big{font-size:30px;font-weight:900;fill:var(--text)}
+.ring .small{font-size:12px;font-weight:700;fill:var(--muted)}
+.today-txt{font-weight:600;color:var(--muted);line-height:1.5}
+.today-txt b{color:var(--text);font-size:1.15rem}
+.meals{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.meal{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border-radius:18px;background:var(--pri);color:#fff;font-size:1.1rem;box-shadow:0 4px 0 var(--pri-d)}
+.meal:hover{background:var(--pri-d)}
+.meal .ic{font-size:1.6rem;line-height:1}
+.meal .lbl{flex:1}
+.meal .lbl small{display:block;font-weight:600;opacity:.9;font-size:.85rem}
+.meal .g{font-weight:900;background:rgba(255,255,255,.22);padding:4px 10px;border-radius:10px}
+.meal.done{background:#fff;color:var(--pri-d);box-shadow:0 0 0 2px var(--line),0 4px 0 var(--line)}
+.meal.done:hover{background:var(--soft)}
+.meal.done .g{background:var(--pri-l)}
+.minor{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.minor.one{grid-template-columns:1fr}
+.minor button{padding:14px 8px;border-radius:16px;white-space:nowrap}
+.stockline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.stockline .kg{font-size:2.2rem;font-weight:900}
+.stockline .days{font-weight:800}
+.bar{height:16px;border-radius:10px;background:var(--pri-l);overflow:hidden;margin:10px 0 8px}
+.bar div{height:100%;border-radius:10px;transition:width .5s}
+.stock-sub{color:var(--muted);font-weight:600}
+.row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.row button{flex:1}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.list li{display:grid;grid-template-columns:52px 1fr auto auto;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--soft)}
+.list .t{font-weight:800;color:var(--muted);font-size:.95rem}
+.list .w{font-weight:700}
+.list .w small{display:block;color:var(--muted);font-weight:600;font-size:.82rem}
+.list .g{font-weight:900}
+.list .x{background:transparent;padding:6px 10px;color:var(--muted);opacity:.6;font-size:1rem}
+.list .x:hover{color:var(--crit);background:var(--crit-l);opacity:1}
+.empty{color:var(--muted);font-weight:600;padding:6px 2px}
+.foot{text-align:center;color:var(--muted);font-size:.85rem;font-weight:600;margin-top:22px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);width:max-content;background:var(--dark);color:#fff;padding:12px 12px 12px 18px;border-radius:16px;display:flex;align-items:center;gap:14px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:60;max-width:calc(100% - 28px)}
+.toast button{background:rgba(255,255,255,.15);color:#fff;padding:8px 14px}
+.toast button:hover{background:rgba(255,255,255,.28)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:grid;place-items:center;z-index:50;padding:16px}
+.modal-box{width:min(420px,100%);background:var(--card);border-radius:24px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal-box h3{margin:0 0 14px;font-size:1.25rem;font-weight:900}
+label.f{display:block;margin-bottom:12px;font-weight:700;font-size:.92rem;color:var(--muted)}
+label.f input,label.f select{margin-top:5px;color:var(--text);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.modal-box p{margin:0 0 12px;line-height:1.45}
+.note{font-size:.88rem;color:var(--muted);font-weight:600}
+
+/* ---- käyttöönotto ---- */
+.wiz{position:fixed;inset:0;z-index:45;background:var(--bg);overflow:auto;transition:background .4s;
+  background-image:radial-gradient(circle at 20% 0%,var(--glow) 0,transparent 50%)}
+.wiz-in{max-width:520px;margin:0 auto;padding:22px 18px 40px;min-height:100%;display:flex;flex-direction:column}
+.prog{height:8px;border-radius:6px;background:var(--pri-l);overflow:hidden;margin-bottom:10px}
+.prog div{height:100%;background:var(--pri);border-radius:6px;transition:width .35s}
+.wiz-step{font-size:.82rem;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.wiz h2{font-size:1.75rem;font-weight:900;margin:26px 0 8px;line-height:1.15}
+.wiz .lead{color:var(--muted);font-weight:600;margin:0 0 22px;line-height:1.45}
+.wiz .body{flex:1}
+.wiz .big-in{font-size:1.5rem;font-weight:800;padding:14px 16px;border-radius:16px}
+.wiz-nav{display:flex;gap:10px;margin-top:28px}
+.wiz-nav .primary{flex:1;padding:16px;font-size:1.1rem;border-radius:16px}
+.wiz-nav .ghost{padding:16px 20px;border-radius:16px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:12px 18px;border-radius:14px;background:#fff;border:2px solid var(--line);font-weight:800}
+.chip:hover{background:var(--soft)}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.photo-pick{display:flex;flex-direction:column;align-items:center;gap:16px}
+.photo-pick .ph{width:180px;height:180px;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 8px 30px rgba(0,0,0,.15);background:var(--pri-l);display:grid;place-items:center;cursor:pointer;overflow:hidden}
+.photo-pick .ph img{width:100%;height:100%;object-fit:cover}
+.photo-pick .ph svg{width:40%;fill:var(--pri)}
+.hue{width:100%;max-width:320px;-webkit-appearance:none;appearance:none;height:14px;border-radius:8px;padding:0;border:none;
+  background:linear-gradient(90deg,hsl(0,45%,55%),hsl(60,45%,55%),hsl(120,45%,55%),hsl(180,45%,55%),hsl(240,45%,55%),hsl(300,45%,55%),hsl(360,45%,55%))}
+.hue::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--pri);box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.hue::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--pri)}
+.swatches{display:flex;gap:6px}
+.swatches span{width:28px;height:28px;border-radius:8px}
+.sec{margin-top:20px}
+.sec > .lbl{font-weight:800;margin-bottom:8px}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.calc{margin-top:12px;padding:14px;border-radius:16px;background:#fff;border:2px dashed var(--line)}
+.calc .res{font-weight:800;margin:6px 0 10px}
+.perMeal{margin-top:10px;font-weight:800;color:var(--pri-d)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:700;margin-top:12px;cursor:pointer}
+.check input{width:22px;height:22px;flex:none;accent-color:var(--pri);margin-top:1px}
+.summary{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.summary .ph{width:140px;height:140px}
+.summary ul{list-style:none;padding:0;margin:18px 0 0;text-align:left;width:100%;display:flex;flex-direction:column;gap:8px}
+.summary li{background:#fff;border-radius:14px;padding:12px 14px;font-weight:700}
+.mrow{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px;margin-top:10px}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;margin-bottom:10px}
+.mhead input{width:130px}
+.mbody{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips.small .chip{padding:8px 12px;font-size:.95rem}
+.amt{display:flex;align-items:center;gap:6px;margin-left:auto}
+.amt input{width:84px;font-weight:800;text-align:right}
+.amt span{font-weight:800;color:var(--muted);width:28px}
+.rawgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rawbox{background:var(--soft);border-radius:16px;padding:12px 14px}
+.rawbox span{display:block;font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.rawbox b{font-size:1.8rem;font-weight:900}
+.rawbox small{display:block;color:var(--muted);font-weight:700;font-size:.85rem;margin-top:2px}
+.thawcall{margin-top:12px;padding:12px 14px;border-radius:16px;display:flex;gap:10px;align-items:center;font-weight:800}
+.thawcall.ok{background:var(--soft);color:var(--pri-d)}
+.thawcall.need{background:var(--warn-l);color:#8a4a12}
+.thawcall button{margin-left:auto;flex:none}
+.noteform{display:flex;gap:8px}
+.noteform input{flex:1}
+.notechips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+.notechips button{padding:7px 11px;font-size:.9rem;border-radius:12px;background:#fff;border:2px solid var(--line)}
+.notechips button:hover{background:var(--soft)}
+.lastseen{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-weight:700;font-size:.92rem;color:var(--muted)}
+.lastseen b{color:var(--text)}
+.list .w.note{font-weight:600}
+.inv-row{display:grid;grid-template-columns:auto 1fr auto auto auto auto;align-items:center;gap:6px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:8px}
+.inv-row.low{border-color:var(--warn);background:var(--warn-l)}
+.inv-row .ic{font-size:1.5rem}
+.inv-row .nm{font-weight:800}
+.inv-row .nm small{display:block;font-weight:600;color:var(--muted);font-size:.82rem}
+.inv-row .q{font-size:1.4rem;font-weight:900;min-width:44px;text-align:center;background:transparent;padding:4px}
+.inv-row .pm{width:42px;height:42px;padding:0;border-radius:12px;font-size:1.3rem}
+.inv-add{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:14px;margin-top:14px}
+.pick{display:flex;gap:6px;flex-wrap:wrap}
+.pick .chip{padding:8px 12px;font-size:.95rem}
+.itemrow{display:flex;gap:8px;align-items:center;margin-top:8px}
+.itemrow .nm{flex:1;font-weight:800}
+.itemrow input{width:90px;text-align:right;font-weight:800}
+.itemrow span{width:34px;color:var(--muted);font-weight:800}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><symbol id="paw" viewBox="0 0 24 24"><ellipse cx="6" cy="9" rx="2.2" ry="3"/><ellipse cx="10" cy="5.5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="18.5" cy="9" rx="2.2" ry="3"/><path d="M12 11c-3.5 0-6.5 4.5-6.5 7 0 2 1.6 3 3.3 3 1.3 0 2-.7 3.2-.7s1.9.7 3.2.7c1.7 0 3.3-1 3.3-3 0-2.5-3-7-6.5-7z"/></symbol></svg>
+
+<header class="top">
+  <div id="avatar"></div>
+  <div><h1 id="dogName">Koirasi</h1><div class="sub" id="sub">Ladataan…</div></div>
+  <button class="gear" id="btnSettings" aria-label="Asetukset" title="Asetukset">⚙️</button>
+</header>
+<div id="alerts"></div>
+
+<div class="cols">
+  <div class="stack">
+    <section class="card">
+      <h2><svg class="paw"><use href="#paw"/></svg>Tänään</h2>
+      <div class="today-top"><div id="ring"></div><div class="today-txt" id="todayTxt"></div></div>
+      <div class="meals" id="meals"></div>
+      <div class="minor"><button id="btnInv">📦 Varasto</button><button id="btnOther" class="ghost">＋ Muu määrä</button></div>
+    </section>
+    <section class="card" id="rawCard" hidden>
+      <h2><svg class="paw"><use href="#paw"/></svg>Lihapullat</h2>
+      <div id="raw"></div>
+      <div class="row"><button id="btnThaw" class="primary">🧊 Ota sulamaan</button><button id="btnFreezer">＋ Pakastimeen</button><button id="btnRawFix" class="ghost">Korjaa</button></div>
+    </section>
+    <section class="card">
+      <h2><svg class="paw"><use href="#paw"/></svg>Muistiinpanot</h2>
+      <form class="noteform" id="noteForm"><input id="noteIn" maxlength="300" placeholder="esim. Maitohappobakteeri annettu" autocomplete="off"><button class="primary">Lisää</button></form>
+      <div class="notechips" id="noteChips"></div>
+      <div class="lastseen" id="lastSeen"></div>
+      <ul class="list" id="notes"></ul>
+    </section>
+  </div>
+  <div class="stack">
+    <section class="card" id="kibbleCard">
+      <h2><svg class="paw"><use href="#paw"/></svg>Kuivaruokaa jäljellä</h2>
+      <div id="stock"></div>
+      <div class="row"><button id="btnBag" class="primary">＋ Uusi säkki</button><button id="btnFix" class="ghost">Korjaa määrä</button></div>
+    </section>
+    <section class="card">
+      <h2><svg class="paw"><use href="#paw"/></svg>Tänään tehty</h2>
+      <ul class="list" id="list"></ul>
+    </section>
+  </div>
+</div>
+<div class="foot" id="foot"></div>
+
+<div id="wiz" class="wiz" hidden><div class="wiz-in">
+  <div class="prog"><div id="wizProg"></div></div>
+  <div class="wiz-step" id="wizStep"></div>
+  <div class="body" id="wizBody"></div>
+  <div class="wiz-nav"><button class="ghost" id="wizBack">←</button><button class="primary" id="wizNext">Seuraava</button></div>
+</div></div>
+<div id="inv" class="wiz" hidden><div class="wiz-in">
+  <div style="display:flex;align-items:center;gap:10px"><h2 style="margin:6px 0;flex:1">📦 Varasto</h2><button class="ghost" id="invClose">✕ Sulje</button></div>
+  <p class="lead" style="margin-bottom:14px">Namit, luut ja muut. Säädä määriä +/− -napeilla tai napauta lukua.</p>
+  <div id="invList"></div>
+  <div class="inv-add"><div style="font-weight:800;margin-bottom:8px">＋ Lisää tuote</div>
+    <form id="invForm"><div class="two"><label class="f">Nimi<input name="name" maxlength="40" required placeholder="esim. Kanankaulat"></label>
+    <label class="f">Yksikkö<select name="unit"><option>kpl</option><option>pss</option><option>prk</option><option>rasia</option><option>g</option></select></label></div>
+    <div class="two"><label class="f">Määrä nyt<input name="qty" type="number" min="0" step="any" inputmode="decimal" required></label>
+    <label class="f">Varoita kun alle<input name="low" type="number" min="0" step="any" inputmode="decimal" value="1"></label></div>
+    <button class="primary" style="width:100%">Lisää varastoon</button></form></div>
+  <div class="note" style="margin-top:14px">Kuivaruoka ja lihapullat näkyvät etusivun omissa korteissaan. Märkäruokapurkit vähenevät automaattisesti, kun ateria kirjataan purkkeina.</div>
+</div></div>
+<input type="file" id="fileIn" accept="image/*" hidden>
+
+<div id="toast" class="toast" hidden><span id="toastTxt"></span><button id="toastUndo">Kumoa</button></div>
+<div id="modal" class="modal" hidden><div class="modal-box"><h3 id="modalTitle"></h3><form id="modalForm"></form></div></div>
+
+<script>
+const DAY = 864e5, HOUR = 36e5;
+const DEF_TIMES = {1:['08:00'],2:['07:30','17:00'],3:['07:00','12:30','17:30'],4:['07:00','11:00','15:00','19:00']};
+const SLOT_NAMES = {1:[['🍽️','Ruoka']],2:[['🌅','Aamuruoka'],['🌙','Iltaruoka']],3:[['🌅','Aamuruoka'],['☀️','Päiväruoka'],['🌙','Iltaruoka']],
+  4:[['🌅','Aamuruoka'],['☀️','Lounas'],['🍎','Välipala'],['🌙','Iltaruoka']]};
+const DEF = {dogName:'', photo:'', theme:null, breed:'', age:'aikuinen', weightKg:null, foodName:'', bagKg:12,
+  meals:2, mealTimes:['07:30','17:00'], plan:[], pullaG:50, gPerDl:40, canG:400, dailyG:null, dailyUnit:'g', thawH:12, alertDays:7, setupDone:false};
+const S = {db:null,user:null,uid:null,local:false,cfg:null,cfgLoaded:false,base:null,rawBase:null,feeds:[],rawlog:[],purchases:[],notes:[],items:[],names:{},asked:new Set(),wizShown:false};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = (n,d=1) => Number(n).toLocaleString('fi-FI',{maximumFractionDigits:d});
+const dayStart = t => { const d=new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
+const hm = t => new Date(t).toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'});
+const fmtT = s => s ? s.replace(':','.') : '';
+const cfg = () => ({...DEF, ...(S.cfg||{})});
+const dogName = () => cfg().dogName || 'Koirasi';
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const rid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const pawSvg = '<svg viewBox="0 0 24 24"><use href="#paw"/></svg>';
+const pl = n => n===1 ? 'lihapulla' : 'lihapullaa';
+
+/* ---------- ateriasuunnitelma ---------- */
+const PLAN0 = {type:'kuiva', g:90, n:2, unit:'g', dl:2, wunit:'g', wg:100, cans:1};
+const planOf = (c,i) => ({...PLAN0, ...((c.plan||[])[i]||{})});
+const TYPES = {kuiva:'🥣 Kuiva', markä:'🥫 Märkä', raaka:'🥩 Raaka'}, TYPE_IC = {kuiva:'🥣', markä:'🥫', raaka:'🥩'};
+const UNITS = {kuiva:['g','dl'], markä:['g','prk'], raaka:['kpl']};
+const slotGOf = (c,p) => p.type==='raaka' ? p.n*(c.pullaG||50) : p.type==='markä' ? (p.wunit==='prk' ? Math.round(p.cans*(c.canG||400)) : p.wg) : p.unit==='dl' ? Math.round(p.dl*(c.gPerDl||40)) : p.g;
+const curUnit = p => p.type==='raaka' ? 'kpl' : p.type==='markä' ? p.wunit : p.unit;
+const getAmt = p => p.type==='raaka' ? p.n : p.type==='markä' ? (p.wunit==='prk'?p.cans:p.wg) : (p.unit==='dl'?p.dl:p.g);
+function setAmt(p,v){ if(p.type==='raaka') p.n=v; else if(p.type==='markä'){ if(p.wunit==='prk') p.cans=v; else p.wg=v; } else if(p.unit==='dl') p.dl=v; else p.g=v; }
+function setUnit(p,u){ if(p.type==='markä') p.wunit=u; else if(p.type==='kuiva') p.unit=u; }
+const r1 = v => Math.max(.1, Math.round(v*10)/10), r0 = v => Math.max(1, Math.round(v));
+function split(p){ const c=D, share=(c.dailyG||180)/c.meals; const u=curUnit(p);
+  setAmt(p, u==='kpl' ? r0(share/(c.pullaG||50)) : u==='dl' ? r1(share/(c.gPerDl||40)) : u==='prk' ? Math.max(.25, Math.round(share/(c.canG||400)*4)/4) : r0(share)); }
+function splitAll(){ D.plan.forEach(split); }
+function extraFields(){ const sl=slotsOf(D); let h='';
+  if(sl.some(s=>s.p.type==='raaka')) h+=`<label class="f sec">Yhden lihapullan paino (g)<input id="wPullaG" type="number" min="1" inputmode="numeric" value="${D.pullaG}"></label>`;
+  if(sl.some(s=>s.p.type==='kuiva'&&s.p.unit==='dl') && D.dailyUnit!=='dl') h+=`<label class="f sec">Paljonko 1 dl kuivaruokaa painaa (g)?<input id="wGdl2" type="number" min="1" inputmode="numeric" value="${D.gPerDl}"></label>`;
+  if(sl.some(s=>s.p.type==='markä'&&s.p.wunit==='prk')) h+=`<label class="f sec">Yhden purkin / pussin koko (g)<input id="wCanG" type="number" min="1" inputmode="numeric" value="${D.canG}"></label>`;
+  return h; }
+const amtOf = p => p.type==='raaka' ? `${p.n} ${pl(p.n)}` : p.type==='markä' ? (p.wunit==='prk' ? `${nf(p.cans,2)} prk märkäruokaa` : `${p.wg} g märkäruokaa`) : (p.unit==='dl' ? `${nf(p.dl)} dl` : `${p.g} g`)+' kuivaruokaa';
+const badgeOf = p => p.type==='raaka' ? `${p.n} kpl` : p.type==='markä' ? (p.wunit==='prk' ? `${nf(p.cans,2)} prk` : `${p.wg} g`) : (p.unit==='dl' ? `${nf(p.dl)} dl` : `${p.g} g`);
+function slotsOf(c){ const n=Math.max(1,Math.min(4,c.meals|0)), t=c.mealTimes||[];
+  return SLOT_NAMES[n].map(([ic,name],i)=>{ const p=planOf(c,i); return {ic,name,time:t[i]||DEF_TIMES[n][i],p,g:slotGOf(c,p)}; }); }
+const slots = () => slotsOf(cfg());
+const daily = () => cfg().dailyG || slots().reduce((a,s)=>a+s.g,0);
+const hasRawC = c => slotsOf(c).some(s=>s.p.type==='raaka');
+const hasKibC = c => slotsOf(c).some(s=>s.p.type==='kuiva');
+const rawPerDay = () => slots().filter(s=>s.p.type==='raaka').reduce((a,s)=>a+s.p.n,0);
+const kibPerDay = () => slots().filter(s=>s.p.type==='kuiva').reduce((a,s)=>a+s.g,0);
+
+/* ---------- teema kuvasta ---------- */
+function applyTheme(t){
+  let h=100, s=40;
+  if(t && t.s >= 0.12){ h=Math.round(t.h); s=Math.round(Math.min(58, 30 + t.s*60)); }
+  const r=document.documentElement.style, H=(sat,l)=>`hsl(${h},${sat}%,${l}%)`, dl=(h>=40&&h<=75)?-6:0;
+  Object.entries({'--bg':H(Math.min(s,45),95),'--card':H(55,99),'--line':H(Math.min(s,34),86),'--soft':H(Math.min(s,45),96),'--hover':H(s,82),'--glow':H(s+8,89),
+    '--pri':H(s,46+dl),'--pri-d':H(s+4,34+dl),'--pri-l':H(s,88),'--text':H(28,16),'--muted':H(12,42),'--dark':H(25,12)}).forEach(([k,v])=>r.setProperty(k,v));
+}
+function themeFromCanvas(cv){
+  const {width:w,height:h}=cv, d=cv.getContext('2d').getImageData(Math.round(w*.15),Math.round(h*.15),Math.round(w*.7),Math.round(h*.7)).data;
+  let x=0,y=0,ws=0,ss=0,n=0;
+  for(let i=0;i<d.length;i+=4){ const r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255, mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2;
+    if(l<.12||l>.95) continue; const c=mx-mn; if(c===0){ n++; continue; }
+    const sat=c/(1-Math.abs(2*l-1)); let hh = mx===r ? ((g-b)/c)%6 : mx===g ? (b-r)/c+2 : (r-g)/c+4; hh*=60; if(hh<0) hh+=360;
+    const wt=sat*(1-Math.abs(l-.5)); x+=Math.cos(hh*Math.PI/180)*wt; y+=Math.sin(hh*Math.PI/180)*wt; ws+=wt; ss+=sat; n++; }
+  if(!n||!ws) return {h:100,s:0};
+  let hue=Math.atan2(y,x)*180/Math.PI; if(hue<0) hue+=360; return {h:Math.round(hue), s:+(ss/n).toFixed(2)};
+}
+let IMG=null; const Z={zoom:1,ox:.5,oy:.42};
+function readImg(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onerror=rej;
+  fr.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>res(im); im.src=fr.result; }; fr.readAsDataURL(file); }); }
+function cropPhoto(){ const im=IMG, w=im.width, h=im.height, m=Math.min(w,h)/Z.zoom;
+  const sx=Math.max(0,Math.min(w-m, Z.ox*w-m/2)), sy=Math.max(0,Math.min(h-m, Z.oy*h-m/2));
+  Z.ox=(sx+m/2)/w; Z.oy=(sy+m/2)/h;
+  const cv=document.createElement('canvas'); cv.width=cv.height=240; cv.getContext('2d').drawImage(im,sx,sy,m,m,0,0,240,240);
+  D.photo=cv.toDataURL('image/jpeg',.82); D.theme=themeFromCanvas(cv); }
+
+/* ---------- laskenta ---------- */
+const isTreat = f => f.type==='herkku';
+const isKib = f => !f.raw && !f.wet && !isTreat(f);
+const todayFeeds = () => { const t0=dayStart(Date.now()); return S.feeds.filter(f=>f.t>=t0 && !isTreat(f)); };
+const foodToday = () => todayFeeds().reduce((a,f)=>a+f.g,0);
+function stockG(){ if(!S.base) return null; return S.base.g - S.feeds.filter(f=>isKib(f) && f.t>S.base.t).reduce((a,f)=>a+f.g,0); }
+function kibRate(){ const t0=dayStart(Date.now()), foods=S.feeds.filter(isKib), fb=kibPerDay()||100; if(!foods.length) return fb;
+  const start=Math.max(dayStart(Math.min(...foods.map(f=>f.t))), t0-14*DAY), days=Math.round((t0-start)/DAY);
+  if(days<3) return fb; const v=foods.filter(f=>f.t>=start&&f.t<t0).reduce((a,f)=>a+f.g,0)/days; return v>0?v:fb; }
+function rawState(){ const b=S.rawBase; if(!b) return null; const now=Date.now(), th=(cfg().thawH||12)*HOUR;
+  let fz=b.freezer, fr=b.fridge, pend=[];
+  for(const e of S.rawlog){ if(e.t<=b.t) continue; if(e.kind==='add') fz+=e.n; if(e.kind==='thaw'){ fz-=e.n; fr+=e.n; if(e.t+th>now) pend.push(e); } }
+  for(const f of S.feeds) if(f.raw && f.t>b.t) fr-=f.raw;
+  fz=Math.max(0,fz); fr=Math.max(0,fr);
+  const thawing=Math.min(fr, pend.reduce((a,e)=>a+e.n,0)), ready=fr-thawing, nextReady=pend.length?Math.min(...pend.map(e=>e.t))+th:null;
+  return {fz,fr,ready,thawing,nextReady}; }
+function rawNeed(){ const rs=rawState(); if(!rs) return null; const tf=todayFeeds();
+  const leftToday = slots().reduce((a,s,i)=>a + (s.p.type==='raaka' && !tf.find(f=>f.slot===i) ? s.p.n : 0),0);
+  return Math.max(0, leftToday + rawPerDay() - rs.fr); }
+function ago(t){ const m=Math.max(0,Math.round((Date.now()-t)/6e4)); if(m<1) return 'juuri'; if(m<60) return m+' min sitten';
+  const h=Math.floor(m/60); return h<24 ? h+' h sitten' : Math.floor(h/24)+' pv sitten'; }
+const who = id => id && S.names[id] ? S.names[id] : '';
+const label = f => f.slot!=null && slots()[f.slot] ? slots()[f.slot].name : (f.raw ? 'Lihapullia' : 'Ruoka');
+const amountTxt = f => f.raw ? `${f.raw} kpl` : f.cans ? `${nf(f.cans,2)} prk` : f.dl ? `${nf(f.dl)} dl` : `${f.g} g`;
+
+/* ---------- näkymä ---------- */
+function render(){
+  const c=cfg(); applyTheme($('wiz').hidden || !D ? c.theme : D.theme);
+  document.title=(c.dogName?c.dogName+' – ':'')+'ruokinta';
+  $('avatar').outerHTML = c.photo ? `<img class="avatar" id="avatar" src="${esc(c.photo)}" alt="${esc(dogName())}">` : `<div class="avatar" id="avatar">${pawSvg}</div>`;
+  $('dogName').innerHTML = esc(dogName()) + (c.breed?` <span class="breed">${esc(c.breed)}</span>`:'');
+  const sl=slots(), tf=todayFeeds(), dg=daily(), food=foodToday(), left=dg-food;
+  const done=sl.map((_,i)=>tf.find(f=>f.slot===i)), next=sl.findIndex((_,i)=>!done[i]), last=S.feeds.find(f=>!isTreat(f));
+  let sub = next<0 ? 'Kaikki ruoat annettu tänään ✓' : `${sl[next].name} klo ${fmtT(sl[next].time)}`;
+  if(next>=0){ const [h,m]=sl[next].time.split(':').map(Number), d=new Date(); d.setHours(h,m,0,0); sub += Date.now()>d.getTime()+HOUR ? ' – myöhässä' : ' odottaa'; }
+  $('sub').textContent = sub + (last ? ' · söi '+ago(last.t) : '');
+  const r=60, C=2*Math.PI*r, p=dg?Math.max(0,Math.min(1,food/dg)):0, over=left<0;
+  $('ring').innerHTML = `<svg class="ring" viewBox="0 0 150 150" role="img" aria-label="Päivän ruoasta jäljellä ${Math.max(0,left)} grammaa">
+    <circle class="bg" cx="75" cy="75" r="${r}"/><circle class="fg" cx="75" cy="75" r="${r}" transform="rotate(-90 75 75)"
+    style="stroke:${over?'var(--warn)':'var(--pri)'};stroke-dasharray:${(C*p).toFixed(1)} ${C.toFixed(1)}"/>
+    <text class="big" x="75" y="78">${over?'+'+(-left):Math.max(0,left)} g</text><text class="small" x="75" y="98">${over?'yli annoksen':'jäljellä'}</text></svg>`;
+  $('todayTxt').innerHTML = `Syönyt <b>${food} g</b><br>päivässä ${dg} g<br>ateriat ${done.filter(Boolean).length} / ${sl.length}`;
+  $('meals').innerHTML = sl.map((s,i)=>{ const d=done[i], raw=s.p.type==='raaka';
+    const what = amtOf(s.p);
+    return `<button class="meal ${d?'done':''}" data-slot="${i}"><span class="ic">${d?'✅':(s.p.type==='kuiva'?s.ic:TYPE_IC[s.p.type])}</span>
+      <span class="lbl">${s.name}<small>${d?`Annettu klo ${hm(d.t)}${who(d.by)?' · '+esc(who(d.by)):''}`:`Klo ${fmtT(s.time)} · ${what}`}</small></span>
+      <span class="g">${d?amountTxt(d):badgeOf(s.p)}</span></button>`; }).join('');
+  let alerts='';
+  // kuivaruoka
+  $('kibbleCard').hidden = !hasKibC(c) && !S.base;
+  const st=stockG();
+  if(st==null) $('stock').innerHTML = `<div class="empty">Ei vielä tietoa. Lisää säkki tai kerro paljonko ruokaa on nyt jäljellä.</div>`;
+  else { const s=Math.max(0,st), days=Math.floor(s/kibRate()), cap=Math.max(c.bagKg*1000,S.base.g), end=new Date(Date.now()+days*DAY);
+    const lvl=days<3?'crit':days<c.alertDays?'warn':'ok', col=lvl==='crit'?'var(--crit)':lvl==='warn'?'var(--warn)':'var(--pri)';
+    $('stock').innerHTML = `<div class="stockline"><span class="kg">${nf(s/1000)} kg</span><span class="days" style="color:${lvl==='ok'?'var(--pri-d)':col}">riittää n. ${days} pv</span></div>
+      <div class="bar"><div style="width:${Math.min(100,s/cap*100).toFixed(1)}%;background:${col}"></div></div>
+      <div class="stock-sub">Loppuu noin ${end.getDate()}.${end.getMonth()+1}.${c.foodName?' · '+esc(c.foodName):''}</div>`;
+    if(lvl!=='ok' && hasKibC(c)) alerts += `<div class="alert ${lvl}">${lvl==='crit'?'⛔':'⚠️'} Kuivaruoka loppuu noin ${days} päivässä – tilaa uusi säkki.<button data-act="bag">Uusi säkki</button></div>`; }
+  // raakaruoka
+  $('rawCard').hidden = !hasRawC(c);
+  if(hasRawC(c)){ const rs=rawState(), rpd=rawPerDay();
+    if(!rs) $('raw').innerHTML = `<div class="empty">Kerro montako lihapullaa on pakastimessa ja jääkaapissa (Korjaa).</div>`;
+    else { const days=Math.floor((rs.fz+rs.fr)/Math.max(1,rpd)), need=rawNeed();
+      $('raw').innerHTML = `<div class="rawgrid">
+        <div class="rawbox"><span>❄️ Pakastimessa</span><b>${rs.fz}</b> kpl<small>riittää n. ${days} pv</small></div>
+        <div class="rawbox"><span>🧊 Jääkaapissa</span><b>${rs.fr}</b> kpl<small>${rs.thawing?`${rs.ready} valmiina · ${rs.thawing} sulaa klo ${hm(rs.nextReady)}`:'kaikki sulaneita'}</small></div></div>
+        <div class="thawcall ${need>0?'need':'ok'}">${need>0?`🧊 Huomiseksi pitää ottaa sulamaan ${need} kpl<button class="primary" data-act="thawNeed">Otettu</button>`:'✓ Huomisen lihapullat ovat jo jääkaapissa'}</div>`;
+      if(need>0 && new Date().getHours()>=17) alerts += `<div class="alert warn">🧊 Muista ottaa ${need} ${pl(need)} sulamaan huomiseksi.<button data-act="thawNeed">Otettu</button></div>`;
+      if(days<c.alertDays) alerts += `<div class="alert ${days<3?'crit':'warn'}">❄️ Pakastimen lihapullat riittävät noin ${days} päivää – tee tai osta lisää.</div>`; } }
+  for(const it of S.items) if(it.low>0 && it.qty<=it.low) alerts += `<div class="alert warn">${esc(it.icon||'📦')} ${esc(it.name)} vähissä – jäljellä ${nf(it.qty,2)} ${esc(it.unit)}.<button data-act="inv">Varasto</button></div>`;
+  if(S.offline) alerts += `<div class="alert warn">Tietoihin ei saada juuri nyt yhteyttä – näkymä voi olla vanhentunut.</div>`;
+  $('alerts').innerHTML = alerts;
+  // lista
+  const t0=dayStart(Date.now());
+  const items=[...tf.map(f=>({t:f.t,id:f.id,k:'feed',txt:esc(label(f)),amt:amountTxt(f),by:f.by})),
+    ...S.rawlog.filter(e=>e.t>=t0).map(e=>({t:e.t,id:e.id,k:'raw',txt:e.kind==='thaw'?'🧊 Sulamaan':'❄️ Pakastimeen',amt:e.n+' kpl',by:e.by})),
+    ...S.notes.filter(n=>n.t>=t0).map(n=>({t:n.t,id:n.id,k:'note',txt:'📝 '+esc(n.text),amt:'',by:n.by}))].sort((a,b)=>b.t-a.t);
+  renderNotes();
+  $('list').innerHTML = items.length ? items.map(x=>`<li><span class="t">${hm(x.t)}</span>
+      <span class="w">${x.txt}${who(x.by)?`<small>${esc(who(x.by))}</small>`:''}</span>
+      <span class="g">${x.amt}</span><button class="x" data-del="${esc(x.id)}" data-k="${x.k}" aria-label="Poista">✕</button></li>`).join('')
+    : `<li class="empty" style="display:block;background:none;padding:4px 2px">Ei vielä mitään tänään.</li>`;
+  $('foot').textContent = S.local ? '💾 Tiedot tallentuvat vain tähän selaimeen.' : S.db ? '🔄 Tiedot jaetaan kaikille, joilla on muokkausoikeus tähän sivuun.' : '';
+  loadNames();
+  if(S.cfgLoaded && !c.setupDone && !S.wizShown){ S.wizShown=true; openWizard(false); }
+}
+async function loadNames(){ if(!S.user?.profiles) return;
+  const ids=[...new Set([...S.feeds,...S.rawlog,...S.notes].map(f=>f.by).filter(id=>id&&!S.asked.has(id)))]; if(!ids.length) return; ids.forEach(i=>S.asked.add(i));
+  try{ const ps=await S.user.profiles(ids); let ch=false; for(const id of ids){ const n=ps?.[id]?.name; if(n){ S.names[id]=n.split(' ')[0]; ch=true; } } if(ch) render(); }catch(e){} }
+
+/* ---------- tallennus ---------- */
+async function w(fn){
+  try{ return await fn() ?? true; }
+  catch(e){
+    if(e?.code==='unavailable'){ await sleep(400+Math.random()*700); try{ return await fn() ?? true; }catch(e2){} }
+    if(e?.code==='invalid_argument'){ goLocal(); toast('Ei tallennusoikeutta jaettuun tietoon – tallennetaan tähän selaimeen. Yritä uudelleen.'); return false; }
+    toast(e?.code==='quota_exceeded' ? 'Tallennustila täynnä.' : 'Tallennus epäonnistui – yritä uudelleen.'); return false; } }
+const LKEY='koira-ruokinta-v1';
+function saveLocal(){ try{ localStorage.setItem(LKEY,JSON.stringify({cfg:S.cfg,base:S.base,rawBase:S.rawBase,feeds:S.feeds,rawlog:S.rawlog,purchases:S.purchases,notes:S.notes,items:S.items})); }catch(e){ toast('Selaimen tallennus ei ole käytettävissä.'); } }
+function loadLocal(){ try{ const d=JSON.parse(localStorage.getItem(LKEY)||'{}'); Object.assign(S,{cfg:d.cfg||null,base:d.base||null,rawBase:d.rawBase||null,feeds:d.feeds||[],rawlog:d.rawlog||[],purchases:d.purchases||[],notes:d.notes||[],items:d.items||[]}); }catch(e){} }
+function goLocal(){ S.db=null; S.local=true; S.unsubs?.forEach(u=>u&&u()); loadLocal(); S.cfgLoaded=true; render(); }
+function loc(fn){ const r=fn(); for(const k of ['feeds','rawlog','purchases','notes']) S[k].sort((a,b)=>b.t-a.t); saveLocal(); render(); return r ?? true; }
+const addTo = (col,key,obj) => S.db ? w(async()=>(await S.db.collection(col).add(obj)).id) : loc(()=>{ const id=rid(); S[key].push({id,...obj}); return id; });
+const delFrom = (col,key,id) => S.db ? w(()=>S.db.collection(col).doc(id).delete()) : loc(()=>{ S[key]=S[key].filter(x=>x.id!==id); });
+const store = {
+  setCfg: c => S.db ? w(()=>S.db.doc('config/settings').set(c)) : loc(()=>{S.cfg=c}),
+  setBase: b => S.db ? w(()=>S.db.doc('stock/base').set(b)) : loc(()=>{S.base=b}),
+  setRawBase: b => S.db ? w(()=>S.db.doc('raw/base').set(b)) : loc(()=>{S.rawBase=b}),
+  addFeed: f => addTo('feeds','feeds',f), delFeed: id => delFrom('feeds','feeds',id),
+  addRaw: e => addTo('rawlog','rawlog',e), delRaw: id => delFrom('rawlog','rawlog',id),
+  addPurchase: p => addTo('purchases','purchases',p),
+  addNote: n => addTo('notes','notes',n), delNote: id => delFrom('notes','notes',id),
+  setItem: (id,d) => S.db ? w(()=>S.db.collection('items').doc(id).set(d)) : loc(()=>{ S.items=S.items.filter(x=>x.id!==id).concat([{id,...d}]).sort((a,b)=>(a.order||0)-(b.order||0)); }),
+  delItem: id => delFrom('items','items',id),
+};
+
+/* ---------- toiminnot ---------- */
+let toastTimer=null, undo=null;
+function toast(text, u){ $('toastTxt').textContent=text; $('toastUndo').hidden=!u; undo=u||null; $('toast').hidden=false;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{$('toast').hidden=true; undo=null;}, 6000); }
+$('toastUndo').onclick = async () => { if(!undo) return; const u=undo; undo=null; $('toast').hidden=true;
+  if(await (u.k==='raw'?store.delRaw(u.id):u.k==='note'?store.delNote(u.id):store.delFeed(u.id))) toast('Peruttu.'); };
+async function feed({g,raw=null,dl=null,cans=null,wet=false,slot=null,t=Date.now()}){
+  if(cans!=null){ cans=Math.round(cans*100)/100; if(!(cans>0)) return; g=cans*(cfg().canG||400); wet=true; }
+  if(raw!=null){ raw=Math.round(raw); if(!(raw>0)) return; g=raw*(cfg().pullaG||50); }
+  if(dl!=null){ dl=Math.round(dl*10)/10; if(!(dl>0)) return; g=dl*(cfg().gPerDl||40); }
+  g=Math.round(g); if(!(g>0)) return;
+  const f={t,g,by:S.uid||null}; if(slot!=null) f.slot=slot; if(raw!=null) f.raw=raw; if(dl!=null) f.dl=dl; if(cans!=null) f.cans=cans; if(wet) f.wet=true;
+  const left = daily() - foodToday() - (t>=dayStart(Date.now()) ? g : 0);
+  const id = await store.addFeed(f); if(!id) return;
+  if(cans){ const it=S.items.find(x=>x.link==='wet'); if(it){ const {id:iid,...d}=it; store.setItem(iid,{...d,qty:Math.max(0,Math.round((it.qty-cans)*100)/100)}); } }
+  toast(`✅ ${label(f)} kirjattu · ${left>=0?left+' g jäljellä tänään':'annos ylittyi '+(-left)+' g'}`, typeof id==='string'?{k:'feed',id}:null); }
+function mealClick(i){ const s=slots()[i], d=todayFeeds().find(f=>f.slot===i), raw=s.p.type==='raaka';
+  const p=s.p, go = () => p.type==='raaka' ? feed({raw:p.n, slot:i}) : p.type==='markä' ? (p.wunit==='prk' ? feed({cans:p.cans, slot:i}) : feed({g:p.wg, wet:true, slot:i})) : p.unit==='dl' ? feed({dl:p.dl, slot:i}) : feed({g:p.g, slot:i});
+  const warns=[];
+  if(d) warns.push(`<b>${s.name}</b> kirjattiin jo klo ${hm(d.t)}${who(d.by)?' ('+esc(who(d.by))+')':''}.`);
+  const rs=rawState(); if(raw && rs && rs.ready < s.p.n) warns.push(`Jääkaapissa on vain <b>${rs.ready}</b> sulanutta lihapullaa${rs.thawing?` (${rs.thawing} sulaa vielä klo ${hm(rs.nextReady)} asti)`:''}.`);
+  if(!warns.length) return go();
+  openModal(d?`${s.name} on jo annettu`:'Lihapullat eivät ole sulaneet', warns.map(x=>`<p>${x}</p>`).join('')+'<p class="note">Kirjataanko silti?</p>', go, 'Kirjaa silti'); }
+async function thaw(n){ n=Math.round(n); if(!(n>0)) return; const rs=rawState();
+  if(rs && rs.fz < n) toast(`Pakastimessa näyttää olevan vain ${rs.fz} kpl – korjaa määrä tarvittaessa.`);
+  const id=await store.addRaw({t:Date.now(),kind:'thaw',n,by:S.uid||null});
+  if(id){ const ready=new Date(Date.now()+(cfg().thawH||12)*HOUR); toast(`🧊 ${n} ${pl(n)} sulamaan · valmiina n. klo ${hm(ready)}`, typeof id==='string'?{k:'raw',id}:null); } }
+async function addFreezer(n){ n=Math.round(n); if(!(n>0)) return; const id=await store.addRaw({t:Date.now(),kind:'add',n,by:S.uid||null});
+  if(id) toast(`❄️ ${n} kpl pakastimeen`, typeof id==='string'?{k:'raw',id}:null); }
+async function addBag(g, price){ if(!(g>0)) return; const cur=Math.max(0,stockG()??0), now=Date.now();
+  if(!await store.addPurchase({t:now,g,price:price>0?price:null,by:S.uid||null})) return;
+  if(await store.setBase({g:cur+g,t:now})) toast(`Säkki lisätty · kuivaruokaa nyt ${nf((cur+g)/1000)} kg`); }
+async function setStock(g){ if(g>=0 && await store.setBase({g,t:Date.now()})) toast(`Kuivaruokaa jäljellä ${nf(g/1000)} kg`); }
+
+function openModal(title, html, onOk, okLabel='Tallenna'){
+  $('modalTitle').textContent=title;
+  $('modalForm').innerHTML = html + `<div class="acts"><button type="button" class="ghost" id="mCancel">Peruuta</button><button class="primary">${okLabel}</button></div>`;
+  $('modal').hidden=false; $('modalForm').querySelector('input')?.focus(); $('mCancel').onclick=closeModal;
+  $('modalForm').onsubmit = e => { e.preventDefault(); const f=Object.fromEntries(new FormData($('modalForm'))); closeModal(); onOk(f); }; }
+function closeModal(){ $('modal').hidden=true; }
+$('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+const numField = (label,name,val,step='1',extra='') => `<label class="f">${label}<input name="${name}" type="number" step="${step}" min="0" inputmode="decimal" value="${val??''}" ${extra}></label>`;
+function openBag(){ openModal('Uusi säkki', `<div class="two">${numField('Koko (kg)','kg',cfg().bagKg,'0.1','required')}${numField('Hinta (€)','price','','0.01','placeholder="vapaaehtoinen"')}</div>
+    <p class="note">Lisätään jäljellä olevan ruoan päälle.</p>`, f=>addBag(parseFloat(f.kg)*1000, parseFloat(f.price))); }
+function openFix(){ const s=stockG(); openModal('Paljonko kuivaruokaa on jäljellä?', numField('Kiloa nyt','kg',s!=null?(Math.max(0,s)/1000).toFixed(1):'','0.1','required')
+    + `<p class="note">Arvio riittää – laskenta jatkuu tästä.</p>`, f=>setStock(parseFloat(f.kg)*1000)); }
+function openThaw(){ const need=rawNeed(); openModal('Ota lihapullia sulamaan', numField('Montako kpl','n',need>0?need:rawPerDay(),'1','required')
+    + `<p class="note">Sulaminen jääkaapissa n. ${cfg().thawH} h.</p>`, f=>thaw(parseFloat(f.n)), 'Otettu'); }
+function openFreezer(){ openModal('Lihapullia pakastimeen', numField('Montako kpl','n','','1','required placeholder="esim. 30"')
+    + `<p class="note">Uusi erä tehty tai ostettu.</p>`, f=>addFreezer(parseFloat(f.n)), 'Lisää'); }
+function openRawFix(){ const rs=rawState(); openModal('Paljonko lihapullia on nyt?', `<div class="two">${numField('❄️ Pakastimessa','fz',rs?rs.fz:'','1','required')}${numField('🧊 Jääkaapissa','fr',rs?rs.fr:'','1','required')}</div>
+    <p class="note">Jääkaapin pullat merkitään sulaneiksi.</p>`, f=>store.setRawBase({freezer:Math.round(+f.fz||0),fridge:Math.round(+f.fr||0),t:Date.now()}).then(ok=>ok&&toast('Lihapullat päivitetty'))); }
+function openOther(){ const hasRaw=hasRawC(cfg());
+  openModal('Kirjaa muu määrä', `<div class="two">${numField('Määrä','amt','','0.1','required')}
+    <label class="f">Mitä<select name="type"><option value="kuiva">g kuivaruokaa</option><option value="dl">dl kuivaruokaa</option><option value="wet">g märkäruokaa</option><option value="prk">prk märkäruokaa</option>${hasRaw?'<option value="raaka">kpl lihapullia</option>':''}</select></label></div>
+    <label class="f">Kellonaika<input name="time" type="time" value="${hm(Date.now()).replace('.',':')}"></label>`,
+  f=>{ let t=Date.now(); if(f.time){ const [h,m]=f.time.split(':').map(Number); const d=new Date(); d.setHours(h,m,0,0); t=d.getTime(); }
+       f.type==='raaka' ? feed({raw:parseFloat(f.amt),t}) : f.type==='dl' ? feed({dl:parseFloat(f.amt),t}) : f.type==='wet' ? feed({g:parseFloat(f.amt),wet:true,t}) : f.type==='prk' ? feed({cans:parseFloat(f.amt),t}) : feed({g:parseFloat(f.amt),t}); }, 'Kirjaa'); }
+
+document.addEventListener('click', e=>{
+  const m=e.target.closest('[data-slot]'); if(m) return mealClick(+m.dataset.slot);
+  const d=e.target.closest('[data-del]'); if(d){ const id=d.dataset.del;
+    if(d.dataset.k==='raw') store.delRaw(id).then(ok=>ok&&toast('Merkintä poistettu'));
+    else if(d.dataset.k==='note') store.delNote(id).then(ok=>ok&&toast('Muistiinpano poistettu'));
+    else { const f=S.feeds.find(x=>x.id===id); if(f) store.delFeed(id).then(ok=>ok&&toast(`${label(f)} poistettu`)); } return; }
+  const a=e.target.closest('[data-act]'); if(!a) return;
+  if(a.dataset.act==='bag') openBag();
+  if(a.dataset.act==='inv') openInv();
+  if(a.dataset.act==='thawNeed'){ const n=rawNeed(); if(n>0) thaw(n); }
+});
+$('btnOther').onclick=openOther; $('btnBag').onclick=openBag; $('btnFix').onclick=openFix;
+$('btnThaw').onclick=openThaw; $('btnFreezer').onclick=openFreezer; $('btnRawFix').onclick=openRawFix;
+$('btnSettings').onclick=()=>openWizard(true);
+
+/* ---------- muistiinpanot ---------- */
+const NOTE_CHIPS = [['🦠','Maitohappobakteeri annettu',/maitohappo/],['💊','Matolääke annettu',/matolääk|matokuur/],['💉','Lääke annettu',/(^|[^o])lääk/],['✂️','Kynnet leikattu',/kyn(net|sien|si)/],['🛁','Pesty',/(^|\s)pes(ty|tiin|u)/]];
+const fmtD = t => { const d=new Date(t); return `${d.getDate()}.${d.getMonth()+1}.`; };
+function renderNotes(){
+  $('noteChips').innerHTML = NOTE_CHIPS.map(([ic,txt],i)=>`<button type="button" data-chip="${i}">${ic} ${txt.split(' ')[0]}</button>`).join('');
+  const seen = NOTE_CHIPS.map(([ic,txt,key])=>{ const n=S.notes.find(x=>key.test(x.text.toLowerCase())); if(!n) return '';
+    const days=Math.floor((dayStart(Date.now())-dayStart(n.t))/DAY);
+    return `<div>${ic} ${esc(txt.split(' ')[0])} viimeksi <b>${fmtD(n.t)}</b> (${days===0?'tänään':days===1?'eilen':days+' pv sitten'})</div>`; }).filter(Boolean);
+  $('lastSeen').innerHTML = seen.join(''); $('lastSeen').hidden = !seen.length;
+  const recent = S.notes.slice(0,8);
+  $('notes').innerHTML = recent.length ? recent.map(n=>`<li><span class="t">${dayStart(n.t)===dayStart(Date.now())?hm(n.t):fmtD(n.t)}</span>
+    <span class="w note">${esc(n.text)}${who(n.by)?`<small>${esc(who(n.by))}</small>`:''}</span><span></span>
+    <button class="x" data-del="${esc(n.id)}" data-k="note" aria-label="Poista">✕</button></li>`).join('')
+    : `<li class="empty" style="display:block;background:none;padding:4px 2px">Ei muistiinpanoja vielä.</li>`; }
+async function addNote(text){ text=String(text||'').trim().slice(0,300); if(!text) return;
+  const id=await store.addNote({t:Date.now(),text,by:S.uid||null});
+  if(id) toast('📝 Muistiinpano lisätty', typeof id==='string'?{k:'note',id}:null); }
+$('noteForm').onsubmit=e=>{ e.preventDefault(); const v=$('noteIn').value; $('noteIn').value=''; addNote(v); };
+$('noteChips').onclick=e=>{ const b=e.target.closest('[data-chip]'); if(b) addNote(NOTE_CHIPS[+b.dataset.chip][1]); };
+
+/* ---------- varasto ---------- */
+const ITEM_PRESETS = [['🍬','Namit','pss'],['🦴','Luut','kpl'],['🦴','Puruluut','kpl'],['🥫','Märkäruoka','prk'],['🦠','Maitohappobakteeri','kpl'],['💊','Matolääke','kpl']];
+const iconFor = n => (ITEM_PRESETS.find(p=>n.toLowerCase().startsWith(p[1].toLowerCase()))||['📦'])[0];
+const stepOf = it => it.unit==='g' ? 50 : 1;
+function renderInv(){ const L=S.items;
+  $('invList').innerHTML = L.length ? L.map(it=>`<div class="inv-row ${it.low>0&&it.qty<=it.low?'low':''}"><span class="ic">${esc(it.icon||'📦')}</span>
+    <div class="nm">${esc(it.name)}<small>${esc(it.unit)}${it.link==='wet'?' · vähenee aterioista':''}</small></div>
+    <button class="pm ghost" data-inv="-" data-id="${esc(it.id)}">−</button><button class="q" data-inv="set" data-id="${esc(it.id)}">${nf(it.qty,2)}</button>
+    <button class="pm" data-inv="+" data-id="${esc(it.id)}">＋</button><button class="x" data-inv="del" data-id="${esc(it.id)}" aria-label="Poista">✕</button></div>`).join('')
+    : `<div class="empty">Varasto on tyhjä – lisää tuotteita alta.</div>`; }
+function openInv(){ renderInv(); $('inv').hidden=false; document.body.style.overflow='hidden'; }
+$('btnInv').onclick=openInv;
+$('invClose').onclick=()=>{ $('inv').hidden=true; document.body.style.overflow=''; };
+const saveItem = (it,patch) => { const {id,...d}=it; return store.setItem(id,{...d,...patch}); };
+$('invList').onclick=e=>{ const b=e.target.closest('[data-inv]'); if(!b) return; const it=S.items.find(x=>x.id===b.dataset.id); if(!it) return;
+  const a=b.dataset.inv;
+  if(a==='+'||a==='-'){ const q=Math.max(0, Math.round((it.qty + (a==='+'?1:-1)*stepOf(it))*100)/100); it.qty=q; renderInv(); saveItem(it,{qty:q}); }
+  if(a==='set') openModal(`${it.name}: määrä nyt`, `<label class="f">Määrä (${esc(it.unit)})<input name="q" type="number" min="0" step="any" inputmode="decimal" value="${it.qty}" required></label>
+    <label class="f">Varoita kun alle<input name="low" type="number" min="0" step="any" inputmode="decimal" value="${it.low||0}"></label>`,
+    f=>saveItem(it,{qty:Math.max(0,parseFloat(f.q)||0), low:Math.max(0,parseFloat(f.low)||0)}).then(()=>renderInv()));
+  if(a==='del') openModal(`Poistetaanko ${it.name}?`, '<p class="note">Tuote poistuu varastolistalta.</p>', ()=>store.delItem(it.id).then(()=>renderInv()), 'Poista'); };
+$('invForm').onsubmit=async e=>{ e.preventDefault(); const f=Object.fromEntries(new FormData($('invForm'))); const name=String(f.name).trim().slice(0,40); if(!name) return;
+  const d={name, unit:f.unit, qty:Math.max(0,parseFloat(f.qty)||0), low:Math.max(0,parseFloat(f.low)||0), icon:iconFor(name), order:Date.now()};
+  if(/märkä/i.test(name) && f.unit==='prk') d.link='wet';
+  if(await store.setItem(rid(), d)){ $('invForm').reset(); renderInv(); toast(`📦 ${name} lisätty varastoon`); } };
+
+/* ---------- käyttöönotto ---------- */
+let D=null, step=0, editMode=false;
+const N = () => D.dogName || 'koirasi';
+function fixPlan(){ const n=D.meals, old=(D.plan||[]).length; D.plan=Array.from({length:n},(_,i)=>({...PLAN0,...((D.plan||[])[i]||{})})); if(old!==n && D.dailyG) splitAll();
+  if(!D.mealTimes || D.mealTimes.length!==n) D.mealTimes=[...DEF_TIMES[n]]; }
+const STEPS = [
+  { render: () => `<h2>Hei! Mikä koirasi nimi on?</h2><p class="lead">Aloitetaan tutustuminen. Tiedot voi muuttaa myöhemmin.</p>
+      <input class="big-in" id="wName" maxlength="30" placeholder="esim. Mauno" value="${esc(D.dogName)}" autocomplete="off">`,
+    bind: () => { const i=$('wName'); i.focus(); i.oninput=()=>{ D.dogName=i.value.trim(); navState(); }; i.onkeydown=e=>{ if(e.key==='Enter' && D.dogName) next(); }; },
+    valid: () => !!D.dogName },
+  { render: () => `<h2>Lisää kuva: ${esc(N())}</h2><p class="lead">Sivun väri poimitaan kuvasta. Voit säätää sitä alla.</p>
+      <div class="photo-pick"><div class="ph" id="wPh" style="${IMG?'cursor:grab;touch-action:none':''}">${D.photo?`<img id="wPhImg" src="${esc(D.photo)}" alt="" draggable="false">`:pawSvg}</div>
+      ${IMG?`<div class="note">Raahaa kuvaa ja zoomaa, kunnes naama on keskellä</div><input type="range" id="wZoom" min="1" max="4" step="0.05" value="${Z.zoom}" style="max-width:320px;accent-color:var(--pri);padding:0;border:none">`:''}
+      <button class="${D.photo?'ghost':'primary'}" id="wPick">${D.photo?'Vaihda kuva':'📷 Valitse kuva'}</button>
+      <div style="font-weight:800;margin-top:6px">Väri</div>
+      <input type="range" class="hue" id="wHue" min="0" max="359" value="${D.theme&&D.theme.s>=.12?D.theme.h:100}">
+      <div class="swatches"><span style="background:var(--pri-l)"></span><span style="background:var(--pri)"></span><span style="background:var(--pri-d)"></span></div></div>`,
+    bind: () => { $('wPick').onclick=()=>$('fileIn').click();
+      $('wHue').oninput=e=>{ D.theme={h:+e.target.value, s:Math.max(.35,D.theme?.s||0)}; applyTheme(D.theme); };
+      if(!IMG){ $('wPh').onclick=()=>$('fileIn').click(); return; }
+      const upd=()=>{ cropPhoto(); $('wPhImg').src=D.photo; applyTheme(D.theme); if(D.theme.s>=.12) $('wHue').value=D.theme.h; };
+      $('wZoom').oninput=e=>{ Z.zoom=+e.target.value; upd(); };
+      let drag=null, raf=0; const ph=$('wPh');
+      ph.onpointerdown=e=>{ drag={x:e.clientX,y:e.clientY}; ph.setPointerCapture(e.pointerId); ph.style.cursor='grabbing'; };
+      ph.onpointermove=e=>{ if(!drag) return; const m=Math.min(IMG.width,IMG.height)/Z.zoom, k=m/ph.clientWidth;
+        Z.ox-=(e.clientX-drag.x)*k/IMG.width; Z.oy-=(e.clientY-drag.y)*k/IMG.height; drag={x:e.clientX,y:e.clientY};
+        if(!raf) raf=requestAnimationFrame(()=>{ raf=0; upd(); }); };
+      ph.onpointerup=ph.onpointercancel=()=>{ drag=null; ph.style.cursor='grab'; }; },
+    valid: () => true },
+  { render: () => `<h2>Kerro vähän lisää</h2><p class="lead">Ikä vaikuttaa ehdotettuun ateriamäärään.</p>
+      <label class="f">Rotu (vapaaehtoinen)<input id="wBreed" maxlength="40" placeholder="esim. cockerspanieli" value="${esc(D.breed)}"></label>
+      <div class="sec"><div class="lbl">Ikä</div><div class="chips" id="wAge">${[['pentu','🐶 Pentu'],['aikuinen','🐕 Aikuinen'],['seniori','🦮 Seniori']].map(([v,l])=>`<button class="chip ${D.age===v?'on':''}" data-v="${v}">${l}</button>`).join('')}</div></div>
+      <label class="f sec">Paino (kg, vapaaehtoinen)<input id="wKg" type="number" step="0.1" min="0.5" inputmode="decimal" value="${D.weightKg??''}"></label>`,
+    bind: () => { $('wBreed').oninput=e=>D.breed=e.target.value.trim(); $('wKg').oninput=e=>D.weightKg=parseFloat(e.target.value)||null;
+      $('wAge').onclick=e=>{ const b=e.target.closest('[data-v]'); if(!b) return; D.age=b.dataset.v;
+        if(!editMode){ D.meals=D.age==='pentu'?3:2; D.mealTimes=[...DEF_TIMES[D.meals]]; fixPlan(); } drawStep(); }; },
+    valid: () => true },
+  { render: () => `<h2>Paljonko ${esc(N())} syö päivässä?</h2><p class="lead">Koko päivän ruokamäärä yhteensä. Se jaetaan seuraavaksi aterioille.</p>
+      <div style="display:flex;gap:10px;align-items:center"><input class="big-in" id="wDaily" type="number" min="0.1" step="${D.dailyUnit==='dl'?'0.1':'1'}" inputmode="decimal" placeholder="${D.dailyUnit==='dl'?'esim. 4':'esim. 180'}" value="${D.dailyUnit==='dl'?(D.dailyG?+(D.dailyG/D.gPerDl).toFixed(1):''):(D.dailyG??'')}">
+        <div class="chips small" id="wDU"><button class="chip ${D.dailyUnit!=='dl'?'on':''}" data-u="g">g</button><button class="chip ${D.dailyUnit==='dl'?'on':''}" data-u="dl">dl</button></div></div>
+      ${D.dailyUnit==='dl'?`<label class="f sec">Paljonko 1 dl ruokaa painaa (g)?<input id="wGdl" type="number" min="1" inputmode="numeric" value="${D.gPerDl}"><span class="note" style="display:block;margin-top:4px">Punnitse kerran tai katso säkistä – tyypillisesti 35–45 g.</span></label>`:''}
+      <p class="note sec">Päiväannos löytyy yleensä ruoan pakkauksen ruokintataulukosta koiran painon mukaan.</p>`,
+    bind: () => { const i=$('wDaily'); i.focus();
+      const setD=()=>{ const v=parseFloat(i.value)||0; D.dailyG = v ? Math.round(D.dailyUnit==='dl' ? v*D.gPerDl : v) : null; D._split=true; navState(); };
+      i.oninput=setD; i.onkeydown=e=>{ if(e.key==='Enter' && D.dailyG) next(); };
+      $('wDU').onclick=e=>{ const b=e.target.closest('[data-u]'); if(!b) return; D.dailyUnit=b.dataset.u; drawStep(); };
+      if($('wGdl')) $('wGdl').oninput=e=>{ D.gPerDl=parseFloat(e.target.value)||40; setD(); }; },
+    valid: () => D.dailyG > 0 },
+  { render: () => { fixPlan(); if(D._split){ splitAll(); D._split=false; }
+      return `<h2>Miten päivän ${D.dailyG} g jaetaan?</h2><p class="lead">Valitse jokaiselle aterialle ruokatyyppi. Määrät on jaettu valmiiksi tasan – muuta tarvittaessa.</p>
+      <div style="font-weight:800;margin-bottom:8px">Montako kertaa päivässä?</div>
+      <div class="chips" id="wMeals">${[1,2,3,4].map(n=>`<button class="chip ${D.meals===n?'on':''}" data-n="${n}">${n}</button>`).join('')}</div>
+      ${slotsOf(D).map((s,i)=>{ const u=UNITS[s.p.type]; return `<div class="mrow"><div class="mhead">${TYPE_IC[s.p.type]} ${s.name}<input type="time" data-time="${i}" value="${D.mealTimes[i]}"></div>
+        <div class="mbody"><div class="chips small">${Object.entries(TYPES).map(([k,l])=>`<button class="chip ${s.p.type===k?'on':''}" data-type="${k}" data-i="${i}">${l}</button>`).join('')}</div>
+        <div class="amt"><input type="number" min="0.1" step="${curUnit(s.p)==='dl'?'0.1':curUnit(s.p)==='prk'?'0.05':'1'}" inputmode="decimal" data-amt="${i}" value="${getAmt(s.p)}">
+        ${u.length>1?`<div class="chips small">${u.map(x=>`<button class="chip ${curUnit(s.p)===x?'on':''}" data-unit="${x}" data-i="${i}">${x}</button>`).join('')}</div>`:`<span>${u[0]}</span>`}</div></div></div>`; }).join('')}
+      ${extraFields()}
+      <div class="perMeal" id="wTot"></div>`; },
+    bind: () => {
+      const tot=()=>{ const sum=slotsOf(D).reduce((a,s)=>a+s.g,0), diff=sum-D.dailyG, ok=Math.abs(diff)<=Math.max(5,D.dailyG*.05);
+        $('wTot').innerHTML = ok ? `✓ Jaettu ${sum} g / ${D.dailyG} g` : `<span style="color:var(--warn)">⚠️ Jaettu ${sum} g / ${D.dailyG} g (${diff>0?'+':''}${diff} g)</span>`; navState(); };
+      tot();
+      $('wMeals').onclick=e=>{ const b=e.target.closest('[data-n]'); if(!b) return; D.meals=+b.dataset.n; D.mealTimes=[...DEF_TIMES[D.meals]]; fixPlan(); splitAll(); drawStep(); };
+      document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{ const p=D.plan[+b.dataset.i]; p.type=b.dataset.type; split(p); drawStep(); });
+      document.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{ const p=D.plan[+b.dataset.i]; setUnit(p,b.dataset.unit); split(p); drawStep(); });
+      document.querySelectorAll('[data-amt]').forEach(i=>i.oninput=()=>{ setAmt(D.plan[+i.dataset.amt], parseFloat(i.value)||0); tot(); });
+      document.querySelectorAll('[data-time]').forEach(i=>i.oninput=()=>{ D.mealTimes[+i.dataset.time]=i.value; });
+      [['wPullaG','pullaG',50],['wGdl2','gPerDl',40],['wCanG','canG',400]].forEach(([id,k,d])=>{ if($(id)) $(id).oninput=e=>{ D[k]=parseFloat(e.target.value)||d; splitAll(); document.querySelectorAll('[data-amt]').forEach(i=>i.value=getAmt(D.plan[+i.dataset.amt])); tot(); }; }); },
+    valid: () => D.plan.every(p=>getAmt(p)>0) },
+  { skip: () => !hasKibC(D),
+    render: () => `<h2>Kuivaruoka</h2><p class="lead">Näin sivu osaa kertoa, milloin säkki on loppumassa.</p>
+      <label class="f">Ruoan nimi (vapaaehtoinen)<input id="wFood" maxlength="80" placeholder="esim. Royal Canin Medium Adult" value="${esc(D.foodName)}"></label>
+      <div class="two"><label class="f">Säkin koko (kg)<input id="wBag" type="number" step="0.1" min="0.1" inputmode="decimal" value="${D.bagKg??''}"></label>
+      ${editMode?'':`<label class="f">Nyt jäljellä (kg)<input id="wStock" type="number" step="0.1" min="0" inputmode="decimal" placeholder="arvio" value="${D._stockKg??''}"></label>`}</div>
+      <p class="note">${editMode?'Määrää voi korjata etusivun "Korjaa määrä" -napista.':'Arvio riittää.'}</p>`,
+    bind: () => { $('wFood').oninput=e=>D.foodName=e.target.value.trim(); $('wBag').oninput=e=>D.bagKg=parseFloat(e.target.value)||12;
+      if($('wStock')) $('wStock').oninput=e=>D._stockKg=e.target.value===''?null:parseFloat(e.target.value); },
+    valid: () => true },
+  { skip: () => !hasRawC(D),
+    render: () => `<h2>Lihapullat</h2><p class="lead">Sivu muistuttaa ottamaan seuraavan päivän pullat sulamaan ja seuraa pakastimen määrää.</p>
+      <label class="f">Montako tuntia sulaminen jääkaapissa kestää?<input id="wThaw" type="number" min="1" max="48" inputmode="numeric" value="${D.thawH}"></label>
+      ${editMode?'<p class="note">Määriä voi korjata etusivun "Korjaa"-napista.</p>':`<div class="two"><label class="f">❄️ Pakastimessa nyt (kpl)<input id="wFz" type="number" min="0" inputmode="numeric" value="${D._fz??''}"></label>
+      <label class="f">🧊 Jääkaapissa nyt (kpl)<input id="wFr" type="number" min="0" inputmode="numeric" value="${D._fr??''}"></label></div>`}`,
+    bind: () => { $('wThaw').oninput=e=>D.thawH=parseFloat(e.target.value)||12;
+      if($('wFz')) $('wFz').oninput=e=>D._fz=e.target.value===''?null:parseInt(e.target.value);
+      if($('wFr')) $('wFr').oninput=e=>D._fr=e.target.value===''?null:parseInt(e.target.value); },
+    valid: () => true },
+  { skip: () => editMode,
+    render: () => { D._items = D._items || [];
+      return `<h2>Muut ruoat ja herkut</h2><p class="lead">Mitä muuta ${esc(N())}lle pidetään kotona? Valitse ja kerro paljonko nyt on – sivu seuraa varastoa ja varoittaa kun jokin on vähissä.</p>
+      <div class="pick" id="wPick2">${ITEM_PRESETS.map(([ic,n,u],i)=>`<button class="chip ${D._items.find(x=>x.name===n)?'on':''}" data-p="${i}">${ic} ${n}</button>`).join('')}</div>
+      <div id="wItems">${D._items.map((it,i)=>`<div class="itemrow"><span>${it.icon}</span><span class="nm">${esc(it.name)}</span><input type="number" min="0" step="any" inputmode="decimal" data-iq="${i}" placeholder="määrä" value="${it.qty??''}"><span>${esc(it.unit)}</span></div>`).join('')}</div>
+      <div class="itemrow" style="margin-top:14px"><input id="wNewName" placeholder="Muu, esim. Kanankaulat" style="flex:1;width:auto;text-align:left"><select id="wNewUnit" style="width:90px"><option>kpl</option><option>pss</option><option>prk</option><option>g</option></select><button id="wNewAdd">＋</button></div>
+      <p class="note sec">Voit ohittaa tämän ja lisätä tuotteita myöhemmin etusivun 📦 Varasto -napista.</p>`; },
+    bind: () => {
+      $('wPick2').onclick=e=>{ const b=e.target.closest('[data-p]'); if(!b) return; const [ic,n,u]=ITEM_PRESETS[+b.dataset.p];
+        const k=D._items.findIndex(x=>x.name===n); if(k>=0) D._items.splice(k,1); else D._items.push({icon:ic,name:n,unit:u,qty:null}); drawStep(); };
+      document.querySelectorAll('[data-iq]').forEach(i=>i.oninput=()=>{ D._items[+i.dataset.iq].qty = i.value===''?null:parseFloat(i.value); });
+      $('wNewAdd').onclick=()=>{ const n=$('wNewName').value.trim(); if(!n) return; D._items.push({icon:iconFor(n),name:n.slice(0,40),unit:$('wNewUnit').value,qty:null}); drawStep(); }; },
+    valid: () => true },
+  { render: () => { const sl=slotsOf(D), tot=sl.reduce((a,s)=>a+s.g,0);
+      return `<div class="summary"><h2 style="margin-top:20px">${editMode?'Tallennetaanko muutokset?':'Valmista!'}</h2>
+      <div class="photo-pick"><div class="ph">${D.photo?`<img src="${esc(D.photo)}" alt="">`:pawSvg}</div></div>
+      <div style="font-size:1.5rem;font-weight:900;margin-top:8px">${esc(D.dogName)}</div>
+      <div class="note">${[D.breed, D.age, D.weightKg?nf(D.weightKg)+' kg':''].filter(Boolean).map(esc).join(' · ')}</div>
+      <ul>${sl.map(s=>`<li>${s.p.type==='raaka'?'🥩':'🥣'} ${s.name} klo ${fmtT(s.time)} – ${amtOf(s.p)}</li>`).join('')}
+      <li>🍽️ Päiväannos ${D.dailyG} g${Math.abs(tot-D.dailyG)>5?` (aterioissa ${tot} g)`:''}</li></ul>
+      <label class="f" style="width:100%;text-align:left;margin-top:14px">Varoita, kun ruokaa on jäljellä alle (päivää)<input id="wAlert" type="number" min="1" max="60" value="${D.alertDays}"></label></div>`; },
+    bind: () => { $('wAlert').oninput=e=>D.alertDays=parseInt(e.target.value)||7; }, valid: () => true },
+];
+function openWizard(edit){ editMode=edit; step=0; IMG=null; D=JSON.parse(JSON.stringify(cfg())); fixPlan();
+  $('wiz').hidden=false; document.body.style.overflow='hidden'; drawStep(); }
+function closeWizard(){ $('wiz').hidden=true; document.body.style.overflow=''; D=null; render(); }
+function navState(){ $('wizNext').disabled = !STEPS[step].valid(); }
+const visible = () => STEPS.map((s,i)=>i).filter(i=>!STEPS[i].skip?.());
+function drawStep(){
+  applyTheme(D.theme); const vis=visible(), pos=vis.indexOf(step)+1;
+  $('wizProg').style.width=(pos/vis.length*100)+'%'; $('wizStep').textContent=`Vaihe ${pos} / ${vis.length}`;
+  $('wizBody').innerHTML=STEPS[step].render(); STEPS[step].bind();
+  $('wizBack').style.visibility=(step===0 && !editMode)?'hidden':'visible'; $('wizBack').textContent=step===0?'✕':'←';
+  $('wizNext').textContent = step===STEPS.length-1 ? (editMode?'Tallenna':'Aloita 🐾') : 'Seuraava'; navState(); }
+function next(){ if(!STEPS[step].valid()) return; if(step>=STEPS.length-1) return finish();
+  do step++; while(step<STEPS.length-1 && STEPS[step].skip?.()); drawStep(); $('wiz').scrollTop=0; }
+$('wizNext').onclick=next;
+$('wizBack').onclick=()=>{ if(step===0){ if(editMode) closeWizard(); return; } do step--; while(step>0 && STEPS[step].skip?.()); drawStep(); };
+$('fileIn').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{ IMG=await readImg(f); Z.zoom=1.6; Z.ox=.5; Z.oy=.42; cropPhoto(); drawStep(); }catch(err){ toast('Kuvaa ei voitu lukea.'); } };
+async function finish(){
+  const c={...D, setupDone:true}; const stock=c._stockKg, fz=c._fz, fr=c._fr; delete c._stockKg; delete c._fz; delete c._fr; delete c._items;
+  delete c.treatsOn; delete c.treatG; delete c.treatsFromFood; delete c.kcal100; delete c._split;
+  c.mealTimes=c.mealTimes.slice(0,c.meals); c.plan=c.plan.slice(0,c.meals);
+  $('wizNext').disabled=true;
+  if(!await store.setCfg(c)){ $('wizNext').disabled=false; return; }
+  S.cfg=c; const now=Date.now();
+  if(!editMode && stock>0 && hasKibC(c)) await store.setBase({g:Math.round(stock*1000), t:now});
+  if(!editMode && hasRawC(c) && (fz!=null || fr!=null)) await store.setRawBase({freezer:fz||0, fridge:fr||0, t:now});
+  if(!editMode) for(const [k,it] of (D._items||[]).entries()){ const d={name:it.name,unit:it.unit,qty:Math.max(0,it.qty||0),low:it.qty>0?1:0,icon:it.icon,order:now+k}; if(/märkä/i.test(it.name)&&it.unit==='prk') d.link='wet'; await store.setItem(rid(),d); }
+  closeWizard(); toast(editMode?'Tiedot tallennettu ✓':`Tervetuloa, ${c.dogName}! 🐾`); }
+
+/* ---------- käynnistys ---------- */
+const use = n => (window.claude && typeof window.claude.use==='function') ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
+render(); setInterval(()=>{ if($('wiz').hidden) render(); }, 60000);
+(async()=>{
+  const [db,user]=await Promise.all([use('db'),use('user')]); S.user=user;
+  let canWrite=null; try{ if(user) canWrite=await user.can('data.write'); }catch(e){}
+  if(!db || canWrite===false){ S.local=true; loadLocal(); S.cfgLoaded=true; render(); return; }
+  S.db=db; try{ S.uid=user?await user.id():null; }catch(e){}
+  const timer=setTimeout(()=>{ if(!S.cfgLoaded){ S.offline=true; render(); } },10000);
+  const onErr=()=>{}, rr=()=>{ if($('wiz').hidden) render(); }; S.unsubs=[];
+  S.unsubs.push(db.doc('config/settings').onSnapshot(s=>{ S.cfg=s.exists?s.data():null; if(!s.metadata.fromCache){ S.cfgLoaded=true; S.offline=false; clearTimeout(timer);} rr(); }, onErr));
+  const since0=()=>dayStart(Date.now()-20*DAY);
+  let uF=null, sF=null; const subFeeds=()=>{ const s=Math.min(since0(), S.base?S.base.t:Infinity, S.rawBase?S.rawBase.t:Infinity); if(s===sF) return; sF=s; if(uF) uF();
+    uF=db.collection('feeds').where('t','>=',s).orderBy('t','desc').limit(1000).onSnapshot(q=>{ S.feeds=q.docs.map(d=>({id:d.id,...d.data()})); rr(); }, onErr); S.unsubs.push(uF); };
+  let uR=null, sR=null; const subRaw=()=>{ const s=Math.min(since0(), S.rawBase?S.rawBase.t:Infinity); if(s===sR) return; sR=s; if(uR) uR();
+    uR=db.collection('rawlog').where('t','>=',s).orderBy('t','desc').limit(1000).onSnapshot(q=>{ S.rawlog=q.docs.map(d=>({id:d.id,...d.data()})); rr(); }, onErr); S.unsubs.push(uR); };
+  S.unsubs.push(db.doc('stock/base').onSnapshot(s=>{ S.base=s.exists?s.data():null; subFeeds(); rr(); }, onErr));
+  S.unsubs.push(db.doc('raw/base').onSnapshot(s=>{ S.rawBase=s.exists?s.data():null; subFeeds(); subRaw(); rr(); }, onErr));
+  subFeeds(); subRaw();
+  S.unsubs.push(db.collection('notes').orderBy('t','desc').limit(200).onSnapshot(q=>{ S.notes=q.docs.map(d=>({id:d.id,...d.data()})); rr(); }, onErr));
+  S.unsubs.push(db.collection('items').orderBy('order').limit(100).onSnapshot(q=>{ S.items=q.docs.map(d=>({id:d.id,...d.data()})); rr(); if(!$('inv').hidden) renderInv(); }, onErr));
+  S.unsubs.push(db.collection('purchases').orderBy('t','desc').limit(10).onSnapshot(q=>{ S.purchases=q.docs.map(d=>({id:d.id,...d.data()})); rr(); }, onErr));
+})();
+</script>
+</body>
+</html>
