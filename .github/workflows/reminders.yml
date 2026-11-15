@@ -27,9 +27,9 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::FIREBASE_SERVICE_ACCOUNT-salaisuus puuttuu – muistutuksia ei lähetetä."
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: steps.chk.outputs.skip != 'true'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.chk.outputs.skip != 'true'
         with:
           node-version: 22
