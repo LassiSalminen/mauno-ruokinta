@@ -1,0 +1,40 @@
+name: Muistutukset
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      TZ: Europe/Helsinki
+    steps:
+      - name: Tarkista salaisuus
+        id: chk
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::FIREBASE_SERVICE_ACCOUNT-salaisuus puuttuu – muistutuksia ei lähetetä."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.chk.outputs.skip != 'true'
+      - uses: actions/setup-node@v4
+        if: steps.chk.outputs.skip != 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --omit=dev
+        if: steps.chk.outputs.skip != 'true'
+      - run: node scripts/send-reminders.mjs
+        if: steps.chk.outputs.skip != 'true'
