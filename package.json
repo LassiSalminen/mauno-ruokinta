@@ -1,0 +1,21 @@
+{
+  "name": "mauno-ruokinta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Maunon ruokinta – koiran ruokinnan seuranta (PWA)",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"tests/unit/*.test.js\"",
+    "test:e2e": "playwright test",
+    "reminders": "node scripts/send-reminders.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  }
+}

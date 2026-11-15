@@ -1,0 +1,10 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.firebase/
+*.log
+# Service account -avaimet eivät koskaan repoon
+service-account*.json
+*-firebase-adminsdk-*.json
+.env
